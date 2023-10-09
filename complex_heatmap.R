@@ -1,4 +1,4 @@
-# Library of functions for advanced tree manipulation and visualization using ggtree, ape, phytools, and other related tools.
+# Library of functions for constructing multi-level heatmaps using the ComplexHeatmap package.
 
 # Function to check if a package is installed, and if not, install it.
 package_install <- function(package_name) {
