@@ -58,9 +58,10 @@ dependencies <- c("ComplexHeatmap",
 
 
 complex_heatmap <- function (input_file, 
+                             transposed = TRUE,
                              reordered_rows = NULL, 
                              reordered_cols = NULL, 
-                             color_palette = NULL, 
+                             color_palette = c("azure2","dodgerblue3","dodgerblue4"), 
                              top_annotation = NULL,
                              top_annotation_title = NULL,
                              right_annotation = NULL, 
@@ -70,6 +71,7 @@ complex_heatmap <- function (input_file,
                              gaps_row = NULL, 
                              gaps_col = NULL, 
                              scale = "none",
+                             title = NULL,
                              fontsize = 30,
                              legend = FALSE,
                              legend_title = "Counts"
@@ -89,7 +91,10 @@ complex_heatmap <- function (input_file,
       counts <- counts[,reordered_cols]
     }
   
-    counts <- t(counts)
+    if ( transposed == TRUE ) {
+      counts <- t(counts)
+    }
+    
     counts <- as.data.frame(counts)
     
     # Generate color_palette
@@ -168,6 +173,7 @@ complex_heatmap <- function (input_file,
                                        fontsize_row = 17,
                                        fontsize_col = 10,
                                        legend = T,
+                                       main = title,
                                        annotation_legend = T,
                                        legend_breaks = legend_breaks,
                                        top_annotation = top_annotation,
@@ -196,6 +202,8 @@ complex_heatmap <- function (input_file,
                                            fontsize_row = 17,
                                            fontsize_col = 10,
                                            legend = T,
+                                           main = title,
+                                           title = NULL,
                                            cluster_legend_title = legend_title,
                                            top_annotation = top_annotation,
                                            left_annotation = left_annotation,
@@ -223,6 +231,7 @@ complex_heatmap <- function (input_file,
                                        fontsize_row = 17,
                                        fontsize_col = 10,
                                        legend = F,
+                                       main = title,
                                        top_annotation = top_annotation,
                                        left_annotation = left_annotation,
                                        right_annotation = right_annotation
