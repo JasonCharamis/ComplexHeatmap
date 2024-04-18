@@ -40,6 +40,22 @@ dependencies <- c("ComplexHeatmap",
 .load_packages( dependencies )
 
 
+.load_file <- function ( input_file = NULL ) {
+  
+  if ( !is.null(input_file) ) {
+    if (typeof(input_file) == "character") {
+      if ( file.exists(input_file) ) {
+        counts <- read.delim (input_file, header = TRUE)
+      } 
+    }
+  } else if ( is.dataframe( input_file ) ) {
+    input_file <- input_file
+  } else {
+    stop("Input file is not provided.")
+  }
+}
+
+
 #' complex_heatmap
 #' Function to visualize a heatmap with a variety of metadata and customizable features
 #'
@@ -57,7 +73,7 @@ dependencies <- c("ComplexHeatmap",
 #' @export
 
 
-complex_heatmap <- function (input_file, 
+complex_heatmap <- function (input_file = NULL, 
                              transposed = TRUE,
                              reordered_rows = NULL, 
                              reordered_cols = NULL, 
@@ -70,6 +86,7 @@ complex_heatmap <- function (input_file,
                              left_annotation_title = "Category",
                              gaps_row = NULL, 
                              gaps_col = NULL, 
+                             border_color = "black",
                              scale = "none",
                              title = NULL,
                              fontsize = 30,
@@ -77,12 +94,14 @@ complex_heatmap <- function (input_file,
                              legend_title = "Counts"
                              ) {
   
-    counts <- read.delim(input_file, header = TRUE)
-  
+    counts <- .load_file(input_file)
+    print (counts)
+
     # First column as rownames - useful for horizontal_annotation
     rownames(counts) <- counts[,1]
-    counts <- counts[,-1]
     
+    counts <- as.matrix (counts[,-1])
+
     if (!is.null(reordered_rows)) {
       counts <- counts[reordered_rows,]
     }
@@ -98,7 +117,7 @@ complex_heatmap <- function (input_file,
     counts <- as.data.frame(counts)
     
     # Generate color_palette
-    col2 <-colorRampPalette(color_palette)(400)
+    col2 <- colorRampPalette(color_palette)(400)
     
     counts_m <- as.matrix.data.frame(counts)
     
@@ -108,7 +127,8 @@ complex_heatmap <- function (input_file,
         left_annotation_title = left_annotation_title
         left_annotation = rowAnnotation(left_annotation_title = anno_text(rownames(counts),
                                                                           gp = gpar(fontsize = fontsize,
-                                                                                    fontface = "italic")
+                                                                                    fontface = "italic"),
+                                                                          width = unit(90,"mm")
                                                                         )
         )
     } else {
@@ -137,7 +157,7 @@ complex_heatmap <- function (input_file,
                                                                         gp = gpar(fill = "azure2",fontsize = fontsize),
                                                                         add_numbers = T, numbers_rot=0, numbers_offset=unit(1,"mm"),
                                                                         height=unit(6,"mm"), ylim=c(0,25)
-                                                                        )
+                                                               )
                                          )
     } else {
         stop("Please provide a right_annotation_title.")
@@ -163,7 +183,7 @@ complex_heatmap <- function (input_file,
                                        cellwidth = 17,
                                        cellheight = 17,
                                        color = col2,
-                                       border_color = "white",
+                                       border_color = border_color,
                                        silent = F,
                                        show_colnames = T,
                                        show_rownames = F,
@@ -192,7 +212,7 @@ complex_heatmap <- function (input_file,
                                            cellwidth = 17,
                                            cellheight = 17,
                                            color = col2,
-                                           border_color = "white",
+                                           border_color = border_color,
                                            silent = F,
                                            show_colnames = T,
                                            show_rownames = F,
@@ -221,7 +241,7 @@ complex_heatmap <- function (input_file,
                                        cellwidth = 17,
                                        cellheight = 17,
                                        color = col2,
-                                       border_color = "white",
+                                       border_color = border_color,
                                        silent = F,
                                        show_colnames = T,
                                        show_rownames = F,
