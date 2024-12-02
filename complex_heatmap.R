@@ -37,24 +37,25 @@ dependencies <- c(
   "ggplot2",
   "dplyr",
   "tidyverse",
-  "colorRamp2"
+  "colorRamp2",
+  "extrafont"
 )
 
 .load_packages(dependencies)
-
 
 .load_file <- function(input_file = NULL) {
   if (!is.null(input_file)) {
     if (typeof(input_file) == "character") {
       if (file.exists(input_file)) {
-        counts <- read.delim(input_file, header = TRUE)
-      }
+        file <- read.delim(input_file, header = TRUE)
+        } 
+      } else if (class(input_file) == "data.frame") {
+          file <- input_file
+      } else {
+          stop("Input file is not provided.")
     }
-  } else if (is.dataframe(input_file)) {
-    input_file <- input_file
-  } else {
-    stop("Input file is not provided.")
   }
+  return( as.data.frame (file) )
 }
 
 
@@ -62,8 +63,8 @@ dependencies <- c(
 #' Function to visualize a heatmap with a variety of metadata and customizable features
 #'
 #' @param counts Path to the counts file.
-#' @param reordered_rows Indices specifying the order of rows. Default is NULL.
-#' @param reordered_cols Indices specifying the order of columns. Default is NULL.
+#' @param reorder_rows Indices specifying the order of rows. Default is NULL.
+#' @param reorder_cols Indices specifying the order of columns. Default is NULL.
 #' @param color_palette The color palette for heatmap. Default is NULL.
 #' @param top_annotation Annotation for the heatmap header. Default is NULL.
 #' @param row_annotation Logical indicating whether to include row annotations. Default is TRUE.
@@ -76,8 +77,8 @@ dependencies <- c(
 
 complex_heatmap <- function(input_file = NULL,
                             transposed = TRUE,
-                            reordered_rows = NULL,
-                            reordered_cols = NULL,
+                            reorder_rows = NULL,
+                            reorder_cols = NULL,
                             color_palette = c("azure2", "dodgerblue3", "dodgerblue4"),
                             top_annotation = NULL,
                             top_annotation_title = NULL,
@@ -96,31 +97,37 @@ complex_heatmap <- function(input_file = NULL,
   
   counts <- .load_file(input_file)
   
-  # First column as rownames - useful for horizontal_annotation
-  rownames(counts) <- counts[, 1]
+  # Manipulate input data
+  if (!is.null(counts)) {
   
-  counts <- as.matrix(counts[, -1])
-  
-  if (!is.null(reordered_rows)) {
-    counts <- counts[reordered_rows, ]
+    # First column as rownames - useful for horizontal_annotation
+    rownames(counts) <- counts[, 1]
+    counts <- as.matrix(counts[, -1])
+    
+    if (!is.null(reorder_rows)) {
+      counts <- counts[reorder_rows, ]
+    }
+    
+    if (!is.null(reorder_cols)) {
+      counts <- counts[, reorder_cols]
+    }
+    
+    if (transposed == TRUE) {
+      counts <- t(counts)
+    }
+    
+    counts <- as.data.frame(counts)
+    
+    # Generate color_palette
+    col2 <- colorRampPalette(color_palette)(400)
+    
+    counts_m <- as.matrix.data.frame(counts)
+    
+  } else {
+    stop("File was not loaded correctly.")
   }
   
-  if (!is.null(reordered_cols)) {
-    counts <- counts[, reordered_cols]
-  }
-  
-  if (transposed == TRUE) {
-    counts <- t(counts)
-  }
-  
-  counts <- as.data.frame(counts)
-  
-  # Generate color_palette
-  col2 <- colorRampPalette(color_palette)(400)
-  
-  counts_m <- as.matrix.data.frame(counts)
-  
-  # Left row annotation with rownames of tsv file
+# Left row annotation with rownames of tsv file
   if (!is.null(left_annotation)) {
     if (!is.null(left_annotation_title)) {
       left_annotation_title = left_annotation_title
@@ -172,51 +179,9 @@ complex_heatmap <- function(input_file = NULL,
     }
   }
   
-  if (legend == TRUE) {
-    if ( scale == "none" ) {
-      legend_title <- "Gene Counts"
-    } else if ( scale == "row" ) {
-      legend_title <- "Z-score"
-    }
-    
-    legend_labels <- c(-2, 0, 2)
-    legend_colors <- color_palette
-    legend_labels_gp <- gpar(fontsize = 12)
-    
-  # Draw heatmap with gene counts
+  custom_text_gp <- gpar(fontfamily = "Aileron")
+  
   plot <- ComplexHeatmap::pheatmap(
-    counts_m,
-    cluster_cols = F,
-    cluster_rows = F,
-    scale = scale,
-    number_color = "black",
-    gaps_row = gaps_row,
-    gaps_col = gaps_col,
-    cellwidth = 17,
-    cellheight = 17,
-    color = col2,
-    border_color = border_color,
-    silent = F,
-    show_colnames = T,
-    show_rownames = F,
-    display_numbers = F,
-    angle_col = c("45"),
-    fontsize = fontsize,
-    fontsize_row = 17,
-    fontsize_col = 10,
-    legend = legend,
-    legend_title = legend_title,
-    legend_labels = legend_labels,
-    legend_colors = legend_colors,
-    legend_labels_gp = legend_labels_gp,
-    main = title,
-    annotation_legend = T,
-    top_annotation = top_annotation,
-    left_annotation = left_annotation,
-    right_annotation = right_annotation
-  )
-  } else {
-      plot <- ComplexHeatmap::pheatmap(
         counts_m,
         cluster_cols = F,
         cluster_rows = F,
@@ -233,20 +198,19 @@ complex_heatmap <- function(input_file = NULL,
         show_rownames = F,
         display_numbers = F,
         angle_col = c("45"),
+        fontfamily = "Aileron",
         fontsize = fontsize,
         fontsize_row = 17,
         fontsize_col = 10,
-        main = title,
         annotation_legend = F,
+        main = title,
         top_annotation = top_annotation,
         left_annotation = left_annotation,
         right_annotation = right_annotation
       )
-  }
-  
   if ( exists ("plot")) {
     return (plot)
   } else {
     print ("Error. Plot was not generated.")
   }
-} 
+}
